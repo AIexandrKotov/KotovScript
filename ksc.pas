@@ -24,13 +24,11 @@ type
   KSCObject = class
     public &Type: KSCType;
     public Name: string;
-    public Value: object;
     
     public constructor(name: string);
     begin
       Self.Name:=name;
       &Type := _object;
-      &Value := nil;
     end;
     
     public function GetType(): KSCType;
@@ -333,7 +331,10 @@ type
     public static procedure DeclareVariable(s: string);
     begin
       var sss:=s.ToWords(':= '.ToArray);
-      if IsDeclarate(sss[1]) then raise new NameAlreadyExistsException($'Переменная с именем {sss[1].ToLower} уже объявлена');
+      if IsDeclarate(sss[1]) then
+      begin
+        Names.RemoveAt(Names.FindIndex(x -> x.Name=sss[1].ToLower));
+      end;
       sss[1]:=sss[1].ToLower;
       
       var a: KSCObject;
@@ -410,8 +411,8 @@ type
       if ss<>nil then
       for var i:=0 to ss.Length-1 do
       begin
-        if ss[i].Any(x -> x='=') and (ss[i].Any(x -> x=':')) and (not (ss[i].ToLower.Contains('var'))) then AssignVariable(ss[i]);
         if ss[i].Left(3)='var' then DeclareVariable(ss[i]);
+        if ss[i].Any(x -> x='=') and (ss[i].Any(x -> x=':')) and (not (ss[i].ToLower.Contains('var'))) then AssignVariable(ss[i]);
         
         if ss[i].ToLower.Left(5)='write' then
         begin

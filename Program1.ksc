@@ -1,10 +1,4 @@
-﻿var a: int16;
-a:=32767;
+﻿var a: int64 = 100;
 write(a);writeln;
-var k := -128;
-write(k);writeln;
-var s := 'проверка issue #7';
-write(s);writeln;
-var ss:= 'проверка возможности писать 
-на нескольких строчках';
-write(ss);
+var a: string = 'проверка';
+write(a);

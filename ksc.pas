@@ -2,49 +2,23 @@
 uses System.Data;
 
 type
-  
-  KSCType = (
-  _object,
-  _action,
-  _function,
-  _sbyte,
-  _int16,
-  _int32,
-  _int64,
-  _byte,
-  _uint16,
-  _uint32,
-  _uint64,
-  _single,
-  _double,
-  _string
-  );
-
   ///Базовый класс в иерархии типов
   KSCObject = class
-    public &Type: KSCType;
     public Name: string;
     
     public constructor(name: string);
     begin
       Self.Name:=name;
-      &Type := _object;
-    end;
-    
-    public function GetType(): KSCType;
-    begin
-      Result:=&Type;
     end;
     
     public function ToString(): string; override;
     begin
-      Result:=&Type.ToString;
+      Result:=Self.GetType.ToString;
     end;
   end;
   
   ///Действие, не возвращающее значений
   KSCAction = class(KSCObject)
-    public &Type := KSCType._action;
     public Args: array of KSCObject;
     public Value: procedure;
     
@@ -66,7 +40,6 @@ type
   
   ///Действие, возвращающее значение
   KSCFunction = class(KSCObject)
-    public &Type := KSCType._function;
     public Args: array of KSCObject;
     public Value: function: KSCObject;
     public Rslt: KSCObject;
@@ -93,7 +66,6 @@ type
     
     public constructor (name: string; a: System.SByte);
     begin
-      &Type := KSCType._sbyte;
       Self.Name:=name;
       Value:=a;
     end;
@@ -110,7 +82,6 @@ type
     
     public constructor (name: string; a: System.Int16);
     begin
-      &Type := KSCType._int16;
       Self.Name:=name;
       Value:=a;
     end;
@@ -127,7 +98,6 @@ type
     
     public constructor (name: string; a: System.Int32);
     begin
-      &Type := KSCType._int32;
       Self.Name:=name;
       Value:=a;
     end;
@@ -144,7 +114,6 @@ type
     
     public constructor (name: string; a: System.Int64);
     begin
-      &Type := KSCType._int64;
       Self.Name:=name;
       Value:=a;
     end;
@@ -161,7 +130,6 @@ type
     
     public constructor (name: string; a: System.Byte);
     begin
-      &Type := KSCType._byte;
       Self.Name:=name;
       Value:=a;
     end;
@@ -178,7 +146,6 @@ type
     
     public constructor (name: string; a: System.UInt16);
     begin
-      &Type := KSCType._uint16;
       Self.Name:=name;
       Value:=a;
     end;
@@ -195,7 +162,6 @@ type
     
     public constructor (name: string; a: System.UInt32);
     begin
-      &Type := KSCType._uint32;
       Self.Name:=name;
       Value:=a;
     end;
@@ -212,7 +178,6 @@ type
     
     public constructor (name: string; a: System.UInt64);
     begin
-      &Type := KSCType._uint64;
       Self.Name:=name;
       Value:=a;
     end;
@@ -229,7 +194,6 @@ type
     
     public constructor (name: string; a: string);
     begin
-      &Type := KSCType._string;
       Self.Name:=name;
       Value:=a;
     end;
@@ -246,7 +210,6 @@ type
     
     public constructor (name: string; a: System.Single);
     begin
-      &Type := KSCType._single;
       Self.Name:=name;
       Value:=a;
     end;
@@ -263,7 +226,6 @@ type
     
     public constructor (name: string; a: System.Double);
     begin
-      &Type := KSCType._double;
       Self.Name:=name;
       Value:=a;
     end;
@@ -302,19 +264,19 @@ type
       end;
       if id>=0 then
       begin
-        case Names[id].Type of
-          _object: raise new DeclareObjectException($'Нельзя присвоить объекту');
-          _sbyte: Names[id]:=new KSCSByte(sss[0],System.SByte.Parse(sss[1]));
-          _int16: Names[id]:=new KSCInt16(sss[0],System.Int16.Parse(sss[1]));
-          _int32: Names[id]:=new KSCInt32(sss[0],System.Int32.Parse(sss[1]));
-          _int64: Names[id]:=new KSCInt64(sss[0],System.Int64.Parse(sss[1]));
-          _byte: Names[id]:=new KSCByte(sss[0],System.Byte.Parse(sss[1]));
-          _uint16: Names[id]:=new KSCUInt16(sss[0],System.UInt16.Parse(sss[1]));
-          _uint32: Names[id]:=new KSCUInt32(sss[0],System.UInt32.Parse(sss[1]));
-          _uint64: Names[id]:=new KSCUInt64(sss[0],System.UInt64.Parse(sss[1]));
-          _single: Names[id]:=new KSCSingle(sss[0],System.Single.Parse(sss[1]));
-          _double: Names[id]:=new KSCSingle(sss[0],System.Double.Parse(sss[1]));
-          _string: Names[id]:=new KSCString(sss[0],GetString(s));
+        match Names[id] with
+          KSCObject(var o): raise new DeclareObjectException($'Нельзя присвоить объекту');
+          KSCSByte(var o): Names[id]:=new KSCSByte(sss[0],System.SByte.Parse(sss[1]));
+          KSCInt16(var o): Names[id]:=new KSCInt16(sss[0],System.Int16.Parse(sss[1]));
+          KSCInt32(var o): Names[id]:=new KSCInt32(sss[0],System.Int32.Parse(sss[1]));
+          KSCInt64(var o): Names[id]:=new KSCInt64(sss[0],System.Int64.Parse(sss[1]));
+          KSCByte(var o): Names[id]:=new KSCByte(sss[0],System.Byte.Parse(sss[1]));
+          KSCUInt16(var o): Names[id]:=new KSCUInt16(sss[0],System.UInt16.Parse(sss[1]));
+          KSCUInt32(var o): Names[id]:=new KSCUInt32(sss[0],System.UInt32.Parse(sss[1]));
+          KSCUInt64(var o): Names[id]:=new KSCUInt64(sss[0],System.UInt64.Parse(sss[1]));
+          KSCSingle(var o): Names[id]:=new KSCSingle(sss[0],System.Single.Parse(sss[1]));
+          KSCDouble(var o): Names[id]:=new KSCSingle(sss[0],System.Double.Parse(sss[1]));
+          KSCString(var o): Names[id]:=new KSCString(sss[0],GetString(s));
         end;
       end else raise new NameNotFoundException($'Переменная {sss[0]} не объявлена');
     end;
@@ -365,7 +327,7 @@ type
         {
           Модуль автоопределения типа, основанный на возможности пропарсировать строку
         }
-        var tp: KSCType;
+        var tp: System.Type;
         var _s100: System.UInt64;
         var _s105: System.Int64;
         var _s110: System.UInt32;
@@ -377,31 +339,29 @@ type
         var _s140: System.Double;
         var _s145: System.Single;
         
-        if System.Single.TryParse(sss[2],_s145) then tp:=_single
-          else if System.Double.TryParse(sss[2],_s140) then tp:=_double
-            else if System.SByte.TryParse(sss[2],_s135) then tp:=_sbyte
-              else if System.Byte.TryParse(sss[2],_s130) then tp:=_byte
-                else if System.Int16.TryParse(sss[2],_s125) then tp:=_int16
-                  else if System.UInt16.TryParse(sss[2],_s120) then tp:=_uint16
-                    else if System.Int32.TryParse(sss[2],_s115) then tp:=_int32
-                      else if System.UInt32.TryParse(sss[2],_s110) then tp:=_uint32
-                        else if System.Int64.TryParse(sss[2],_s105) then tp:=_int64
-                          else if System.UInt64.TryParse(sss[2],_s100) then tp:=_uint64
-                            else tp:=_string;
-        case tp of
-          _object: Names.Add(new KSCObject(sss[1]));
-          _sbyte: Names.Add(new KSCSByte(sss[1],_s135));
-          _int16: Names.Add(new KSCInt16(sss[1],_s125));
-          _int32: Names.Add(new KSCInt32(sss[1],_s115));
-          _int64: Names.Add(new KSCInt64(sss[1],_s105));
-          _byte: Names.Add(new KSCByte(sss[1],_s130));
-          _uint16: Names.Add(new KSCUInt16(sss[1],_s120));
-          _uint32: Names.Add(new KSCUInt32(sss[1],_s110));
-          _uint64: Names.Add(new KSCUInt64(sss[1],_s100));
-          _string: Names.Add(new KSCString(sss[1],GetString(s)));
-          _single: Names.Add(new KSCSingle(sss[1],_s145));
-          _double: Names.Add(new KSCDouble(sss[1],_s140));
-        end;
+        if System.Single.TryParse(sss[2],_s145) then tp:=typeof(KSCSingle)
+          else if System.Double.TryParse(sss[2],_s140) then tp:=typeof(KSCDouble)
+            else if System.SByte.TryParse(sss[2],_s135) then tp:=typeof(KSCSByte)
+              else if System.Byte.TryParse(sss[2],_s130) then tp:=typeof(KSCByte)
+                else if System.Int16.TryParse(sss[2],_s125) then tp:=typeof(KSCInt16)
+                  else if System.UInt16.TryParse(sss[2],_s120) then tp:=typeof(KSCUInt16)
+                    else if System.Int32.TryParse(sss[2],_s115) then tp:=typeof(KSCInt32)
+                      else if System.UInt32.TryParse(sss[2],_s110) then tp:=typeof(KSCUInt32)
+                        else if System.Int64.TryParse(sss[2],_s105) then tp:=typeof(KSCInt64)
+                          else if System.UInt64.TryParse(sss[2],_s100) then tp:=typeof(KSCUInt64)
+                            else tp:=typeof(KSCString);
+        if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
+        if tp=typeof(KSCSByte) then Names.Add(new KSCSByte(sss[1],_s135));
+        if tp=typeof(KSCInt16) then Names.Add(new KSCInt16(sss[1],_s125));
+        if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],_s115));
+        if tp=typeof(KSCInt64) then Names.Add(new KSCInt64(sss[1],_s105));
+        if tp=typeof(KSCByte) then Names.Add(new KSCByte(sss[1],_s130));
+        if tp=typeof(KSCUInt16) then Names.Add(new KSCUInt16(sss[1],_s120));
+        if tp=typeof(KSCUInt32) then Names.Add(new KSCUInt32(sss[1],_s110));
+        if tp=typeof(KSCUInt64) then Names.Add(new KSCUInt64(sss[1],_s100));
+        if tp=typeof(KSCSingle) then Names.Add(new KSCString(sss[1],GetString(s)));
+        if tp=typeof(KSCDouble) then Names.Add(new KSCSingle(sss[1],_s145));
+        if tp=typeof(KSCString) then Names.Add(new KSCDouble(sss[1],_s140));
       end;
     end;
     
@@ -434,7 +394,7 @@ type
                 if not f then f:=true;
                 cnt+=1;
                 id:=k;
-                if Names[k].Type=KSCType._string then strincludes:=true;
+                if Names[k] is KSCString then strincludes:=true;
               end;
             if (((f) and (cnt>1)) or (sss[1].Any(x -> (x='+') or (x='-') or (x='*') or (x='/')))) and (not strincludes)  then
             begin

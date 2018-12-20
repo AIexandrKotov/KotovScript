@@ -236,6 +236,29 @@ type
     end;
   end;
   
+  ///Представляет массив объектов
+  KSCArray = class(KSCObject)
+    public Value: array of KSCObject;
+    
+    public constructor (name: string; a: array of KSCObject);
+    begin
+      Self.Name:=name;
+      Value:=a;
+    end;
+    
+    public function ToString(): string; override;
+    begin
+      var sb:=new StringBuilder;
+      sb+='(';
+      for var i:=0 to Value.Length-1 do
+      begin
+        sb+=Value[i].ToString;
+        if i<>Value.Length-1 then sb+=',';
+      end;
+      sb+=')';
+      Result:=sb.ToString;
+    end;
+  end;
 var
   Names:=new List<KSCObject>;
   Tree:=new List<KSCObject>;
@@ -255,7 +278,23 @@ type
         else if System.Int32.TryParse(s,_s115) then Result:=typeof(KSCInt32)
           else Result:=typeof(KSCString);
     end;
-  
+    
+    public static function GetArrayLength(s: string): integer;
+    begin
+      var a, b: integer;
+      a:=s.IndexOf('[');
+      b:=s.LastIndexOf(']');
+      if (a-b)>1 then Result:=System.Int32.Parse(Copy(s,a+2,b-a-1)) else Result:=-1;
+    end;
+    
+    public static function GetArray(s: string): array of string;
+    begin
+      var a, b: integer;
+      a:=s.IndexOf('(');
+      b:=s.LastIndexOf(')');
+      Result:=Copy(s,a+2,b-a-1).Split(',');
+    end;
+    
     public static function GetString(s: string): string;
     begin
       var a, b: integer;
@@ -315,34 +354,89 @@ type
       begin
         if Copy(s,k,2)=':=' then f:=true;
       end;
+      
+      var IsArr: boolean;
       if not f then
-      begin
-        case sss[2].ToLower of
-          //'object','': Names.Add(new KSCObject(sss[1]));
-          'byte': if sss.Length>3 then Names.Add(new KSCByte(sss[1],System.Byte.Parse(sss[3]))) else Names.Add(new KSCByte(sss[1],0));
-          'uint16': if sss.Length>3 then Names.Add(new KSCUInt16(sss[1],System.UInt16.Parse(sss[3]))) else Names.Add(new KSCUInt16(sss[1],0));
-          'uint32': if sss.Length>3 then Names.Add(new KSCUInt32(sss[1],System.UInt32.Parse(sss[3]))) else Names.Add(new KSCUInt32(sss[1],0));
-          'uint64': if sss.Length>3 then Names.Add(new KSCUInt64(sss[1],System.UInt64.Parse(sss[3]))) else Names.Add(new KSCUInt64(sss[1],0));
-          'sbyte': if sss.Length>3 then Names.Add(new KSCSByte(sss[1],System.SByte.Parse(sss[3]))) else Names.Add(new KSCSByte(sss[1],0));
-          'int16': if sss.Length>3 then Names.Add(new KSCInt16(sss[1],System.Int16.Parse(sss[3]))) else Names.Add(new KSCInt16(sss[1],0));
-          'int32': if sss.Length>3 then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[3]))) else Names.Add(new KSCInt32(sss[1],0));
-          'int64': if sss.Length>3 then Names.Add(new KSCInt64(sss[1],System.Int64.Parse(sss[3]))) else Names.Add(new KSCInt64(sss[1],0));
-          'single': if sss.Length>3 then Names.Add(new KSCSingle(sss[1],System.Single.Parse(s.ToWords('=')[1]))) else Names.Add(new KSCSingle(sss[1],0));
-          'double': if sss.Length>3 then Names.Add(new KSCDouble(sss[1],System.Double.Parse(s.ToWords('=')[1]))) else Names.Add(new KSCDouble(sss[1],0));
-          'string': if sss.Length>3 then Names.Add(new KSCString(sss[1],GetString(s))) else Names.Add(new KSCString(sss[1],''));
-        end;
-      end
+        IsArr:=((sss[2].Any(x -> x='[')) and ( sss[2].Any(x -> x=']'))) or ((sss[3].Any(x -> x='(')) and (sss[3].Any(x -> x=')')))
+      else IsArr:=((sss[2].Any(x -> x='(')) and ( sss[2].Any(x -> x=')')));
+      
+      //var a : int32 = 40;
+      //var b : int32[10];
+      //var b : int32[] = (40,40);
+      //var b : int32[10] = (40,40);
+      //var b := (40,40);
+      
+      if IsArr then
+        if not f then
+        begin
+          if sss[2].Left(5)='int32' then 
+          begin
+            var l:=GetArrayLength(s);
+            var al:=GetArray(s.Split('=')[1]);
+            var k: array of KSCObject;
+            if l=-1 then k:=new KSCObject[al.Length] else k:=new KSCObject[l];
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCInt32(i.ToString,System.Int32.Parse(al[i]))
+                else k[i]:=new KSCInt32(i.ToString,0);
+            Names.Add(new KSCArray(sss[1],k));
+          end;
+        end
+        else
+        begin
+          var al:=GetArray(s.Split('=')[1]);
+          var tp:=AutoTypeParser(al[0]);
+          
+          if tp=typeof(KSCInt32) then
+          begin
+            var k:=new KSCObject[al.Length];
+            for var i:=0 to k.Length-1 do
+              k[i]:=new KSCInt32(i.ToString,System.Int32.Parse(al[i]));
+            Names.Add(new KSCArray(sss[1],k));
+          end;
+          if tp=typeof(KSCDouble) then
+          begin
+            var k:=new KSCObject[al.Length];
+            for var i:=0 to k.Length-1 do
+              k[i]:=new KSCDouble(i.ToString,System.Double.Parse(al[i]));
+            Names.Add(new KSCArray(sss[1],k));
+          end;
+          if tp=typeof(KSCString) then
+          begin
+            var k:=new KSCObject[al.Length];
+            for var i:=0 to k.Length-1 do
+              k[i]:=new KSCString(i.ToString,GetString(al[i]));
+            Names.Add(new KSCArray(sss[1],k));
+          end;
+        end
       else
-      begin
-        {
-          Модуль автоопределения типа, основанный на возможности пропарсировать строку
-        }
-        var tp := AutoTypeParser(sss[2]);
-        //if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
-        if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[2])));
-        if tp=typeof(KSCDouble) then Names.Add(new KSCDouble(sss[1],System.Double.Parse(sss[2])));
-        if tp=typeof(KSCString) then Names.Add(new KSCString(sss[1],sss[2]));
-      end;
+        if not f then
+        begin
+          case sss[2].ToLower of
+            //'object','': Names.Add(new KSCObject(sss[1]));
+            'byte': if sss.Length>3 then Names.Add(new KSCByte(sss[1],System.Byte.Parse(sss[3]))) else Names.Add(new KSCByte(sss[1],0));
+            'uint16': if sss.Length>3 then Names.Add(new KSCUInt16(sss[1],System.UInt16.Parse(sss[3]))) else Names.Add(new KSCUInt16(sss[1],0));
+            'uint32': if sss.Length>3 then Names.Add(new KSCUInt32(sss[1],System.UInt32.Parse(sss[3]))) else Names.Add(new KSCUInt32(sss[1],0));
+            'uint64': if sss.Length>3 then Names.Add(new KSCUInt64(sss[1],System.UInt64.Parse(sss[3]))) else Names.Add(new KSCUInt64(sss[1],0));
+            'sbyte': if sss.Length>3 then Names.Add(new KSCSByte(sss[1],System.SByte.Parse(sss[3]))) else Names.Add(new KSCSByte(sss[1],0));
+            'int16': if sss.Length>3 then Names.Add(new KSCInt16(sss[1],System.Int16.Parse(sss[3]))) else Names.Add(new KSCInt16(sss[1],0));
+            'int32': if sss.Length>3 then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[3]))) else Names.Add(new KSCInt32(sss[1],0));
+            'int64': if sss.Length>3 then Names.Add(new KSCInt64(sss[1],System.Int64.Parse(sss[3]))) else Names.Add(new KSCInt64(sss[1],0));
+            'single': if sss.Length>3 then Names.Add(new KSCSingle(sss[1],System.Single.Parse(s.ToWords('=')[1]))) else Names.Add(new KSCSingle(sss[1],0));
+            'double': if sss.Length>3 then Names.Add(new KSCDouble(sss[1],System.Double.Parse(s.ToWords('=')[1]))) else Names.Add(new KSCDouble(sss[1],0));
+            'string': if sss.Length>3 then Names.Add(new KSCString(sss[1],GetString(s))) else Names.Add(new KSCString(sss[1],''));
+          end;
+        end
+        else
+        begin
+          {
+            Модуль автоопределения типа, основанный на возможности пропарсировать строку
+          }
+          var tp := AutoTypeParser(sss[2]);
+          //if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
+          if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[2])));
+          if tp=typeof(KSCDouble) then Names.Add(new KSCDouble(sss[1],System.Double.Parse(sss[2])));
+          if tp=typeof(KSCString) then Names.Add(new KSCString(sss[1],sss[2]));
+        end;
     end;
     
     public static procedure AnalizeNames(s: string);

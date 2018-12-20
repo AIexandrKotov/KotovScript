@@ -1,4 +1,6 @@
-﻿var a: int64 = 100;
-write(a);writeln;
-var a: string = 'проверка';
-write(a);
+﻿var b := ('раз','два','три');//Правильно;
+write(b);writeln;
+var b := (2.0,3.5);//Правильно;
+write(b);writeln;
+var b := ('раз два','три, четыре, пять');//Работает очень странно;
+write(b);

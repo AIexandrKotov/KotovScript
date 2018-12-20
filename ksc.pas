@@ -3,7 +3,7 @@ uses System.Data;
 
 type
   ///Базовый класс в иерархии типов
-  KSCObject = class
+  KSCObject = abstract class
     public Name: string;
     
     public constructor(name: string);
@@ -318,7 +318,7 @@ type
       if not f then
       begin
         case sss[2].ToLower of
-          'object','': Names.Add(new KSCObject(sss[1]));
+          //'object','': Names.Add(new KSCObject(sss[1]));
           'byte': if sss.Length>3 then Names.Add(new KSCByte(sss[1],System.Byte.Parse(sss[3]))) else Names.Add(new KSCByte(sss[1],0));
           'uint16': if sss.Length>3 then Names.Add(new KSCUInt16(sss[1],System.UInt16.Parse(sss[3]))) else Names.Add(new KSCUInt16(sss[1],0));
           'uint32': if sss.Length>3 then Names.Add(new KSCUInt32(sss[1],System.UInt32.Parse(sss[3]))) else Names.Add(new KSCUInt32(sss[1],0));
@@ -338,7 +338,7 @@ type
           Модуль автоопределения типа, основанный на возможности пропарсировать строку
         }
         var tp := AutoTypeParser(sss[2]);
-        if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
+        //if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
         if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[2])));
         if tp=typeof(KSCDouble) then Names.Add(new KSCDouble(sss[1],System.Double.Parse(sss[2])));
         if tp=typeof(KSCString) then Names.Add(new KSCString(sss[1],sss[2]));

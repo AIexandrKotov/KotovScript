@@ -246,6 +246,16 @@ type
   DeclareObjectException = class(System.Exception) end;
 
   Compilator = static class
+    public static function AutoTypeParser(s: string): System.Type;
+    begin
+      var _s115: System.Int32;
+      var _s140: System.Double;
+      
+      if System.Double.TryParse(s,_s140) then Result:=typeof(KSCDouble)
+        else if System.Int32.TryParse(s,_s115) then Result:=typeof(KSCInt32)
+          else Result:=typeof(KSCString);
+    end;
+  
     public static function GetString(s: string): string;
     begin
       var a, b: integer;
@@ -327,41 +337,11 @@ type
         {
           Модуль автоопределения типа, основанный на возможности пропарсировать строку
         }
-        var tp: System.Type;
-        var _s100: System.UInt64;
-        var _s105: System.Int64;
-        var _s110: System.UInt32;
-        var _s115: System.Int32;
-        var _s120: System.UInt16;
-        var _s125: System.Int16;
-        var _s130: System.Byte;
-        var _s135: System.SByte;
-        var _s140: System.Double;
-        var _s145: System.Single;
-        
-        if System.Single.TryParse(sss[2],_s145) then tp:=typeof(KSCSingle)
-          else if System.Double.TryParse(sss[2],_s140) then tp:=typeof(KSCDouble)
-            else if System.SByte.TryParse(sss[2],_s135) then tp:=typeof(KSCSByte)
-              else if System.Byte.TryParse(sss[2],_s130) then tp:=typeof(KSCByte)
-                else if System.Int16.TryParse(sss[2],_s125) then tp:=typeof(KSCInt16)
-                  else if System.UInt16.TryParse(sss[2],_s120) then tp:=typeof(KSCUInt16)
-                    else if System.Int32.TryParse(sss[2],_s115) then tp:=typeof(KSCInt32)
-                      else if System.UInt32.TryParse(sss[2],_s110) then tp:=typeof(KSCUInt32)
-                        else if System.Int64.TryParse(sss[2],_s105) then tp:=typeof(KSCInt64)
-                          else if System.UInt64.TryParse(sss[2],_s100) then tp:=typeof(KSCUInt64)
-                            else tp:=typeof(KSCString);
+        var tp := AutoTypeParser(sss[2]);
         if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
-        if tp=typeof(KSCSByte) then Names.Add(new KSCSByte(sss[1],_s135));
-        if tp=typeof(KSCInt16) then Names.Add(new KSCInt16(sss[1],_s125));
-        if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],_s115));
-        if tp=typeof(KSCInt64) then Names.Add(new KSCInt64(sss[1],_s105));
-        if tp=typeof(KSCByte) then Names.Add(new KSCByte(sss[1],_s130));
-        if tp=typeof(KSCUInt16) then Names.Add(new KSCUInt16(sss[1],_s120));
-        if tp=typeof(KSCUInt32) then Names.Add(new KSCUInt32(sss[1],_s110));
-        if tp=typeof(KSCUInt64) then Names.Add(new KSCUInt64(sss[1],_s100));
-        if tp=typeof(KSCSingle) then Names.Add(new KSCString(sss[1],GetString(s)));
-        if tp=typeof(KSCDouble) then Names.Add(new KSCSingle(sss[1],_s145));
-        if tp=typeof(KSCString) then Names.Add(new KSCDouble(sss[1],_s140));
+        if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[2])));
+        if tp=typeof(KSCDouble) then Names.Add(new KSCDouble(sss[1],System.Double.Parse(sss[2])));
+        if tp=typeof(KSCString) then Names.Add(new KSCString(sss[1],sss[2]));
       end;
     end;
     

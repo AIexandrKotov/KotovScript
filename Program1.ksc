@@ -1,2 +1,10 @@
-﻿var n:=100;
-write(n*n);
+﻿var a: int16;
+a:=32767;
+write(a);writeln;
+var k := -128;
+write(k);writeln;
+var s := 'проверка issue #7';
+write(s);writeln;
+var ss:= 'проверка возможности писать 
+на нескольких строчках';
+write(ss);

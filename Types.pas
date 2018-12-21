@@ -1,124 +1,99 @@
 ﻿unit Types;
 
-uses System, OperatorNew, LightParser, Exceptions;
-
-const
-  ReservedNames: array of string = (
-    'KSCObject',
-    'object',
-    'KSCInt32',
-    'int32'
-  );
-  
-  LocalName = '<>LocalVariable';
-
-function IsType(s: string) := ReservedNames.Contains(s);
+uses System;
 
 type
-  BadFormatException = class(KSCException) end;
-
-  ///Является предком всех KSC-типов, это исходный базовый класс
-  KSCObject = abstract class(object)
-    const TypeName = 'object';
-    const FullTypeName = 'kcsobject';
+  ///Ключевой объект
+  KSCObject = abstract class
+    public const TypeName = 'object';
     
     private _name: string;
     
-    public procedure Rename(newname: string);
+    public function GetName: string := _name;
+    
+    public property Name: string read GetName;
+    
+    public constructor (name: string);
     begin
-      _name:=newname;
+      _name:=name;
     end;
     
-    ///Имя объекта
-    public property Name: string read _name write Rename;
+    public function ToString: string; override := Self.GetType().ToString;
     
-    ///Преобразует объект в строку
-    public function ToString: string; override := Self.GetType.ToString;
+    public procedure SetValue(s: object) := exit;
   end;
   
-  KSCAutoType = sealed class(KSCObject)
-  end;
-  
-  {$region Целые числовые типы}
   KSCInt32 = class(KSCObject)
-    const TypeName = 'int32';
-    const FullTypeName = 'kscint32';
+    public const TypeName = 'int32';
     
     private _value: Int32;
     
-    public procedure SetValue(a: integer) := _value := a;
+    public procedure SetValue(a: Int32) := _value := a;
     
     public property Value: Int32 read _value write SetValue;
     
-    public function ToString: string; override := Self._value.ToString;
-    
-    public constructor (name: string; value: integer);
+    public constructor (name: string; a: Int32);
     begin
       _name:=name;
-      _value:=value;
+      _value:=a;
     end;
     
     public constructor (name: string; a: KSCInt32);
     begin
       _name:=name;
-      _value:=a._value;
+      _value := a._value;
     end;
     
-    public static function ParseConstructor(s: string): KSCInt32;
+    public function ToString: string; override := Value.ToString;
+    
+    public function Parse(s: string): KSCInt32;
     begin
-      Result:=new KSCInt32(LocalName,Int32.Parse(s));
+      Result:=new KSCInt32('<>localvariablename',Int32.Parse(s));
     end;
     
-    ///Преобразует строку в объект
-    public static function Parse(s: string): KSCInt32;
+    public constructor (name: string; s: string);
     begin
-      try
-        if OperatorNew.Contains(s) then Result:=ParseConstructor(s.GetBetweenString('(',')')) else Result:=new KSCInt32(LocalName,Int32.Parse(s));
-      except
-        on e: KSCException do raise new BadFormatException('Не удалось преобразовать строку к Int32');
-      end;
+      Create(name, Parse(s));
     end;
     
-    ///Преобразует строковое представление в объект и возвращает true, если преобразование было выполнено успешно
-    public static function TryParse(s: string; var rslt: KSCInt32): boolean;
-    begin
-      try
-        Rslt:=Parse(s);
-        Result:=true;
-      except
-        on e: BadFormatException do Result:=false;
-      end;
-    end;
-    
+    public procedure SetValue(s: string) := SetValue(Parse(s));
   end;
-  {$endregion}
-  
-function ParseType(s: string): System.Type;
+
+function IsTypeName(s: string): boolean;
+var
+  tns: array of string =(
+    KSCInt32.TypeName,
+    KSCObject.TypeName
+  );
 begin
-  case s of
-    KSCObject.TypeName, KSCObject.FullTypeName: Result:=typeof(KSCObject);
-    KSCInt32.TypeName, KSCInt32.FullTypeName: Result:=typeof(KSCInt32);
+  Result:=false;
+  for var i:=0 to tns.Length-1 do
+    if s.ToLower = tns[i] then Result:=true;
+end;
+
+function StrToType(s: string): System.Type;
+begin
+  case s.ToLower of
+    KSCInt32.TypeName: Result:=typeof(KSCInt32);
   end;
 end;
 
-function TypeToString(a: System.Type): string;
+function GetNullVariable(name: string; &Type: System.Type): KSCObject;
 begin
-  if a = typeof(KSCObject) then Result:=KSCObject.FullTypeName;
-  if a = typeof(KSCInt32) then Result:=KSCInt32.FullTypeName;
+  if &Type = typeof(KSCInt32) then Result:=new KSCInt32(name,0);
 end;
 
-function DeclareAndAssign(name: string; &Type: System.Type; parse: string): KSCObject;
+function GetVariable(name, parse: string; &Type: System.Type): KSCObject;
 begin
-  if &Type = typeof(KSCAutoType) then
-  begin
-    
-  end
-  else
-  begin
-    if &Type = typeof(KSCInt32) then Result:=new KSCInt32(name,KSCInt32.Parse(parse));
-  end;
+  if &Type = typeof(KSCInt32) then Result:=new KSCInt32(name,parse);
+end;
+
+function GetAutoVariable(name, parse: string): KSCObject;
+begin
+  var Auto001: Int32;
+  if Int32.TryParse(parse,Auto001) then Result:=new KSCInt32(name,parse);
 end;
 
 begin
-  
+
 end.

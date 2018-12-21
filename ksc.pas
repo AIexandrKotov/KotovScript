@@ -1,6 +1,16 @@
 ﻿{$reference 'System.Data.dll'}
 uses System.Data;
 
+function Lambda1498_1(sss: array of string): boolean;
+begin
+  if sss.Any(x ->
+    begin
+      Result:=(x.Any(y -> y='[')) or (x.Any(y -> y=']'));
+    end) then Result:=true;
+  if sss[2].Any(x -> x='(') then Result:=true;
+  if sss[2].Any(x -> x=')') then Result:=true;
+end;
+
 type
   ///Базовый класс в иерархии типов
   KSCObject = abstract class
@@ -304,6 +314,32 @@ type
       Result:=Copy(s,a+2,b-a-1).Replace('''''','''').Replace('\n',NewLine);
     end;
     
+    public static function GetStringArray(s: string): array of string;
+    begin
+      var a, b: integer;
+      a:=s.IndexOf('(');
+      b:=s.LastIndexOf(')');
+      var sts:=Copy(s,a+2,b-a);
+      var Internals: boolean;
+      var Last:=1;
+      var Lst:=new List<string>;
+      for var i:=1 to sts.Length do
+      begin
+        if (not internals) and (sts[i]=',') then
+        begin
+          Lst.Add(Copy(sts,Last,i-Last)); 
+          Last:=i+1;
+        end;
+          
+        if sts[i]='''' then
+        begin
+          if Internals then Internals:=false else Internals:=true;
+        end;
+      end;
+      Lst.Add(Copy(sts,Last,sts.Length-Last));
+      Result:=Lst.ToArray.ConvertAll(x -> GetString(x));
+    end;
+    
     public static procedure AssignVariable(s: string);
     begin
       var sss:=s.ToWords(':= '.ToArray);
@@ -356,10 +392,16 @@ type
         if Copy(s,k,2)=':=' then f:=true;
       end;
       
-      var IsArr: boolean;
-      if not f then
-        IsArr:=((sss[2].Any(x -> x='[')) and ( sss[2].Any(x -> x=']'))) or ((sss[3].Any(x -> x='(')) and (sss[3].Any(x -> x=')')))
-      else IsArr:=((sss[2].Any(x -> x='(')) and ( sss[2].Any(x -> x=')')));
+      var IsArr: boolean = Lambda1498_1(sss);
+      
+      {begin /// Issue #1498
+        if sss.Any(x ->
+          begin
+            Result:=(x.Any(y -> y='[')) or (x.Any(y -> y=']'));
+          end) then IsArr:=true;
+        if sss[2].Any(x -> x='(') then IsArr:=true;
+        if sss[2].Any(x -> x=')') then IsArr:=true;
+      end;}
       
       //var a : int32 = 40;
       //var b : int32[10];
@@ -408,9 +450,10 @@ type
           end;
           if tp=typeof(KSCString) then
           begin
-            var k:=new KSCObject[al.Length];
+            var kk:=GetStringArray(s);
+            var k:=new KSCObject[kk.Length];
             for var i:=0 to k.Length-1 do
-              k[i]:=new KSCString(i.ToString,GetString(al[i]));
+              k[i]:=new KSCString(i.ToString,kk[i]);
             Names.Add(new KSCArray(sss[1],k));
           end;
         end

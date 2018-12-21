@@ -1,2 +1,3 @@
-﻿var int32: int32;
-write(int32);
+var a: int32;
+var b: int32 = 0;
+var c := 0;

@@ -11,7 +11,7 @@ begin
   if sss[2].Any(x -> x=')') then Result:=true;
 end;
 
-type
+type  
   ///Базовый класс в иерархии типов
   KSCObject = abstract class
     public Name: string;
@@ -280,6 +280,24 @@ type
   DifferentArrayElementsException = class(System.Exception) end;
 
   Compilator = static class
+    public static function CreateAndParse(a: KSCObject; name, parse: string): KSCObject;
+    begin
+      match a with
+        KSCObject(var o): raise new DeclareObjectException($'Нельзя присвоить объекту');
+        KSCSByte(var o): Result:=new KSCSByte(name,System.SByte.Parse(parse));
+        KSCInt16(var o): Result:=new KSCInt16(name,System.Int16.Parse(parse));
+        KSCInt32(var o): Result:=new KSCInt32(name,System.Int32.Parse(parse));
+        KSCInt64(var o): Result:=new KSCInt64(name,System.Int64.Parse(parse));
+        KSCByte(var o): Result:=new KSCByte(name,System.Byte.Parse(parse));
+        KSCUInt16(var o): Result:=new KSCUInt16(name,System.UInt16.Parse(parse));
+        KSCUInt32(var o): Result:=new KSCUInt32(name,System.UInt32.Parse(parse));
+        KSCUInt64(var o): Result:=new KSCUInt64(name,System.UInt64.Parse(parse));
+        KSCSingle(var o): Result:=new KSCSingle(name,System.Single.Parse(parse));
+        KSCDouble(var o): Result:=new KSCSingle(name,System.Double.Parse(parse));
+        KSCString(var o): Result:=new KSCString(name,GetString(parse));
+      end;
+    end;
+    
     public static function AutoTypeParser(s: string): System.Type;
     begin
       var _s115: System.Int32;
@@ -350,20 +368,7 @@ type
       end;
       if id>=0 then
       begin
-        match Names[id] with
-          KSCObject(var o): raise new DeclareObjectException($'Нельзя присвоить объекту');
-          KSCSByte(var o): Names[id]:=new KSCSByte(sss[0],System.SByte.Parse(sss[1]));
-          KSCInt16(var o): Names[id]:=new KSCInt16(sss[0],System.Int16.Parse(sss[1]));
-          KSCInt32(var o): Names[id]:=new KSCInt32(sss[0],System.Int32.Parse(sss[1]));
-          KSCInt64(var o): Names[id]:=new KSCInt64(sss[0],System.Int64.Parse(sss[1]));
-          KSCByte(var o): Names[id]:=new KSCByte(sss[0],System.Byte.Parse(sss[1]));
-          KSCUInt16(var o): Names[id]:=new KSCUInt16(sss[0],System.UInt16.Parse(sss[1]));
-          KSCUInt32(var o): Names[id]:=new KSCUInt32(sss[0],System.UInt32.Parse(sss[1]));
-          KSCUInt64(var o): Names[id]:=new KSCUInt64(sss[0],System.UInt64.Parse(sss[1]));
-          KSCSingle(var o): Names[id]:=new KSCSingle(sss[0],System.Single.Parse(sss[1]));
-          KSCDouble(var o): Names[id]:=new KSCSingle(sss[0],System.Double.Parse(sss[1]));
-          KSCString(var o): Names[id]:=new KSCString(sss[0],GetString(s));
-        end;
+        CreateAndParse(Names[id],sss[0],sss[1]);
       end else raise new NameNotFoundException($'Переменная {sss[0]} не объявлена');
     end;
     
@@ -415,7 +420,7 @@ type
           var l:=GetArrayLength(s);
           var al:=GetArray(s);
           var tp:=AutoTypeParser(al[0]);
-          foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массивы должны быть одного типа');
+          foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массива должны быть одного типа');
           var k: array of KSCObject;
           if l=-1 then k:=new KSCObject[al.Length] else k:=new KSCObject[l];
           
@@ -495,7 +500,7 @@ type
         begin
           var al:=GetArray(s.Split('=')[1]);
           var tp:=AutoTypeParser(al[0]);
-          foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массивы должны быть одного типа');
+          foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массива должны быть одного типа');
           
           if tp=typeof(KSCInt32) then
           begin

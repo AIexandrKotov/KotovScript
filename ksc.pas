@@ -267,6 +267,7 @@ type
   NameNotFoundException = class(System.Exception) end;
   NameAlreadyExistsException = class(System.Exception) end;
   DeclareObjectException = class(System.Exception) end;
+  DifferentArrayElementsException = class(System.Exception) end;
 
   Compilator = static class
     public static function AutoTypeParser(s: string): System.Type;
@@ -373,6 +374,10 @@ type
           begin
             var l:=GetArrayLength(s);
             var al:=GetArray(s.Split('=')[1]);
+            
+            var tp:=AutoTypeParser(al[0]);
+            foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массивы должны быть одного типа');
+            
             var k: array of KSCObject;
             if l=-1 then k:=new KSCObject[al.Length] else k:=new KSCObject[l];
             for var i:=0 to k.Length-1 do
@@ -385,6 +390,7 @@ type
         begin
           var al:=GetArray(s.Split('=')[1]);
           var tp:=AutoTypeParser(al[0]);
+          foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массивы должны быть одного типа');
           
           if tp=typeof(KSCInt32) then
           begin

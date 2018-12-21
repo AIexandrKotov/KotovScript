@@ -1,6 +1,12 @@
 ﻿{$reference 'System.Data.dll'}
 uses System.Data;
 
+const
+  ///Ключевые слова
+  ReservedWords: array of string = ('var','write');
+  ///Имена типов
+  TypeNames: array of string = ('byte','uint16','uint32','uint64','sbyte','int16','int32','int64','string','boolean','double','single');
+
 function Lambda1498_1(sss: array of string): boolean;
 begin
   if sss.Any(x ->
@@ -25,10 +31,6 @@ type
     begin
       Result:=Self.GetType.ToString;
     end;
-  end;
-  
-  KSCMemory = class(KSCObject)
-    public constructor := exit;
   end;
   
   ///Действие, не возвращающее значений
@@ -299,6 +301,7 @@ type
   DeclareObjectException = class(System.Exception) end;
   DifferentArrayElementsException = class(System.Exception) end;
   ArrayOutOfRange = class(System.Exception) end;
+  NameIsReservedException = class(System.Exception) end;
 
   Compilator = static class
     public static function CreateAndParse(a: KSCObject; name, parse: string): KSCObject;
@@ -427,13 +430,17 @@ type
       end;
     end;
     
+    public static function IsReserved(s: string): boolean := (ReservedWords.Contains(s)) or (TypeNames.Contains(s));
+    
     public static procedure DeclareVariable(s: string);
     begin
       var sss:=s.ToWords(':= '.ToArray);
+      if IsReserved(sss[1]) then raise new NameIsReservedException($'Переменная не может иметь имя {sss[1]}');
       if IsDeclarate(sss[1]) then
       begin
         Names.RemoveAt(Names.FindIndex(x -> x.Name=sss[1].ToLower));
       end;
+      
       sss[1]:=sss[1].ToLower;
       
       var a: KSCObject;

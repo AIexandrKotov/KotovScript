@@ -13,7 +13,7 @@ end;
 
 type  
   ///Базовый класс в иерархии типов
-  KSCObject = abstract class
+  KSCObject = class
     public Name: string;
     
     public constructor(name: string);
@@ -25,6 +25,10 @@ type
     begin
       Result:=Self.GetType.ToString;
     end;
+  end;
+  
+  KSCMemory = class(KSCObject)
+    public constructor := exit;
   end;
   
   ///Действие, не возвращающее значений
@@ -294,6 +298,7 @@ type
   NameAlreadyExistsException = class(System.Exception) end;
   DeclareObjectException = class(System.Exception) end;
   DifferentArrayElementsException = class(System.Exception) end;
+  ArrayOutOfRange = class(System.Exception) end;
 
   Compilator = static class
     public static function CreateAndParse(a: KSCObject; name, parse: string): KSCObject;
@@ -313,6 +318,22 @@ type
         KSCBoolean(var o): Result:=new KSCBoolean(name,System.Boolean.Parse(parse));
         KSCString(var o): Result:=new KSCString(name,GetString(parse));
       end;
+    end;
+    
+    public static function ExCreateAndParse(a: KSCObject; b: System.Type; name, parse: string): KSCObject;
+    begin
+      if b = typeof(KSCSByte) then Result:=new KSCSByte(name,System.SByte.Parse(parse));
+      if b = typeof(KSCInt16) then Result:=new KSCInt16(name,System.Int16.Parse(parse));
+      if b = typeof(KSCInt32) then Result:=new KSCInt32(name,System.Int32.Parse(parse));
+      if b = typeof(KSCInt64) then Result:=new KSCInt64(name,System.Int64.Parse(parse));
+      if b = typeof(KSCByte) then Result:=new KSCByte(name,System.Byte.Parse(parse));
+      if b = typeof(KSCUInt16) then Result:=new KSCUInt16(name,System.UInt16.Parse(parse));
+      if b = typeof(KSCUInt32) then Result:=new KSCUInt32(name,System.UInt32.Parse(parse));
+      if b = typeof(KSCUInt64) then Result:=new KSCUInt64(name,System.UInt64.Parse(parse));
+      if b = typeof(KSCSingle) then Result:=new KSCSingle(name,System.Single.Parse(parse));
+      if b = typeof(KSCDouble) then Result:=new KSCSingle(name,System.Double.Parse(parse));
+      if b = typeof(KSCBoolean) then Result:=new KSCBoolean(name,System.Boolean.Parse(parse));
+      if b = typeof(KSCString) then Result:=new KSCString(name,GetString(parse));
     end;
     
     public static function AutoTypeParser(s: string): System.Type;
@@ -381,13 +402,19 @@ type
     begin
       var sss:=s.ToWords(':= '.ToArray);
       var id:=-1;
+      var rightid:=-1;
       for var k:=0 to Names.Count-1 do
       begin
         if sss[0].ToLower=Names[k].Name then id:=k;
       end;
+      for var k:=0 to Names.Count-1 do
+      begin
+        if sss[1].ToLower=Names[k].Name then rightid:=k;
+      end;
       if id>=0 then
       begin
-        Names[id]:=CreateAndParse(Names[id],sss[0],sss[1]);
+        if rightid>=0 then Names[id]:=ExCreateAndParse(Names[id],Names[rightid].GetType,sss[0],Names[rightid].ToString)
+          else Names[id]:=CreateAndParse(Names[id],sss[0],sss[1]);
       end else raise new NameNotFoundException($'Переменная {sss[0]} не объявлена');
     end;
     
@@ -551,7 +578,7 @@ type
           end;
         end
       else
-        if not f then
+        if (not f) then
         begin
           case sss[2].ToLower of
             //'object','': Names.Add(new KSCObject(sss[1]));
@@ -574,6 +601,7 @@ type
           {
             Модуль автоопределения типа, основанный на возможности пропарсировать строку
           }
+          
           var tp := AutoTypeParser(sss[2]);
           //if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
           if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[2])));
@@ -585,7 +613,7 @@ type
     
     public static procedure AnalizeNames(s: string);
     begin
-      var ss:=s.Remove(#13#10).Split(';');
+      var ss:=s.Remove(#13#10).Replace('//',';').Split(';');
       if ss<>nil then
       for var i:=0 to ss.Length-1 do
       begin

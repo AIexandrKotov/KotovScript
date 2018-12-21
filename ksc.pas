@@ -368,7 +368,7 @@ type
       end;
       if id>=0 then
       begin
-        CreateAndParse(Names[id],sss[0],sss[1]);
+        Names[id]:=CreateAndParse(Names[id],sss[0],sss[1]);
       end else raise new NameNotFoundException($'Переменная {sss[0]} не объявлена');
     end;
     

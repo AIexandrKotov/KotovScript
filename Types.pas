@@ -30,6 +30,8 @@ type
     
     public procedure SetValue(a: Int32) := _value := a;
     
+    public procedure SetValue(a: KSCInt32) := _value := a._value;
+    
     public property Value: Int32 read _value write SetValue;
     
     public constructor (name: string; a: Int32);

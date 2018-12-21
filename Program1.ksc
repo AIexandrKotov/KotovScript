@@ -1,6 +1,7 @@
-var a: int32 := 100000;
-writeln(a);
-var b := a;
-writeln(a/b);
-var c := a/b*1000;
-writeln(c);
+var a := -5;
+var a+5 := a+5;
+a+5 := 100;
+writeln(a+5);
+destruct a+5;
+var a+5 := 100;
+writeln(a+5);

@@ -269,6 +269,22 @@ type
       Result:=sb.ToString;
     end;
   end;
+  
+  ///Представляет логическое значение
+  KSCBoolean = class(KSCObject)
+    public Value: System.Boolean = false;
+    
+    public constructor (name: string; a: System.Boolean);
+    begin
+      Self.Name:=name;
+      Value:=a;
+    end;
+    
+    public function ToString(): string; override;
+    begin
+      Result:=Value.ToString;
+    end;
+  end;
 var
   Names:=new List<KSCObject>;
   Tree:=new List<KSCObject>;
@@ -283,7 +299,7 @@ type
     public static function CreateAndParse(a: KSCObject; name, parse: string): KSCObject;
     begin
       match a with
-        KSCObject(var o): raise new DeclareObjectException($'Нельзя присвоить объекту');
+        //KSCObject(var o): raise new DeclareObjectException($'Нельзя присвоить объекту');
         KSCSByte(var o): Result:=new KSCSByte(name,System.SByte.Parse(parse));
         KSCInt16(var o): Result:=new KSCInt16(name,System.Int16.Parse(parse));
         KSCInt32(var o): Result:=new KSCInt32(name,System.Int32.Parse(parse));
@@ -294,18 +310,21 @@ type
         KSCUInt64(var o): Result:=new KSCUInt64(name,System.UInt64.Parse(parse));
         KSCSingle(var o): Result:=new KSCSingle(name,System.Single.Parse(parse));
         KSCDouble(var o): Result:=new KSCSingle(name,System.Double.Parse(parse));
+        KSCBoolean(var o): Result:=new KSCBoolean(name,System.Boolean.Parse(parse));
         KSCString(var o): Result:=new KSCString(name,GetString(parse));
       end;
     end;
     
     public static function AutoTypeParser(s: string): System.Type;
     begin
+      var _s100: System.Boolean;
       var _s115: System.Int32;
       var _s140: System.Double;
       
       if System.Double.TryParse(s,_s140) then Result:=typeof(KSCDouble)
         else if System.Int32.TryParse(s,_s115) then Result:=typeof(KSCInt32)
-          else Result:=typeof(KSCString);
+          else if System.Boolean.TryParse(s,_s100) then Result:=typeof(KSCBoolean)
+            else Result:=typeof(KSCString);
     end;
     
     public static function GetArrayLength(s: string): integer;
@@ -484,6 +503,12 @@ type
               if i<=al.Length-1 then k[i]:=new KSCDouble(i.ToString,System.Double.Parse(al[i]))
                 else k[i]:=new KSCDouble(i.ToString,0);
           end;
+          if sss[2].Left(6)='boolean' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCBoolean(i.ToString,System.Boolean.Parse(al[i]))
+                else k[i]:=new KSCBoolean(i.ToString,false);
+          end;
           if sss[2].Left(6)='string' then 
           begin
             var kk:=GetStringArray(s);
@@ -540,6 +565,7 @@ type
             'int64': if sss.Length>3 then Names.Add(new KSCInt64(sss[1],System.Int64.Parse(sss[3]))) else Names.Add(new KSCInt64(sss[1],0));
             'single': if sss.Length>3 then Names.Add(new KSCSingle(sss[1],System.Single.Parse(s.ToWords('=')[1]))) else Names.Add(new KSCSingle(sss[1],0));
             'double': if sss.Length>3 then Names.Add(new KSCDouble(sss[1],System.Double.Parse(s.ToWords('=')[1]))) else Names.Add(new KSCDouble(sss[1],0));
+            'boolean': if sss.Length>3 then Names.Add(new KSCBoolean(sss[1],System.Boolean.Parse(s.ToWords('=')[1]))) else Names.Add(new KSCBoolean(sss[1],false));
             'string': if sss.Length>3 then Names.Add(new KSCString(sss[1],GetString(s))) else Names.Add(new KSCString(sss[1],''));
           end;
         end
@@ -552,6 +578,7 @@ type
           //if tp=typeof(KSCObject) then Names.Add(new KSCObject(sss[1]));
           if tp=typeof(KSCInt32) then Names.Add(new KSCInt32(sss[1],System.Int32.Parse(sss[2])));
           if tp=typeof(KSCDouble) then Names.Add(new KSCDouble(sss[1],System.Double.Parse(sss[2])));
+          if tp=typeof(KSCBoolean) then Names.Add(new KSCBoolean(sss[1],System.Boolean.Parse(sss[2])));
           if tp=typeof(KSCString) then Names.Add(new KSCString(sss[1],sss[2]));
         end;
     end;

@@ -294,7 +294,7 @@ type
     begin
       var a, b: integer;
       a:=s.IndexOf('[');
-      b:=s.LastIndexOf(']');
+      b:=s.IndexOf(']');
       if (b-a)>1 then Result:=System.Int32.Parse(Copy(s,a+2,b-a-1)) else Result:=-1;
     end;
     
@@ -412,21 +412,84 @@ type
       if IsArr then
         if not f then
         begin
+          var l:=GetArrayLength(s);
+          var al:=GetArray(s);
+          var tp:=AutoTypeParser(al[0]);
+          foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массивы должны быть одного типа');
+          var k: array of KSCObject;
+          if l=-1 then k:=new KSCObject[al.Length] else k:=new KSCObject[l];
+          
+          if sss[2].Left(5)='sbyte' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCSByte(i.ToString,System.SByte.Parse(al[i]))
+                else k[i]:=new KSCSByte(i.ToString,0);
+          end;
+          if sss[2].Left(5)='int16' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCInt16(i.ToString,System.Int16.Parse(al[i]))
+                else k[i]:=new KSCInt16(i.ToString,0);
+          end;
           if sss[2].Left(5)='int32' then 
           begin
-            var l:=GetArrayLength(s);
-            var al:=GetArray(s);
-            
-            var tp:=AutoTypeParser(al[0]);
-            foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массивы должны быть одного типа');
-            
-            var k: array of KSCObject;
-            if l=-1 then k:=new KSCObject[al.Length] else k:=new KSCObject[l];
             for var i:=0 to k.Length-1 do
               if i<=al.Length-1 then k[i]:=new KSCInt32(i.ToString,System.Int32.Parse(al[i]))
                 else k[i]:=new KSCInt32(i.ToString,0);
-            Names.Add(new KSCArray(sss[1],k));
           end;
+          if sss[2].Left(5)='int64' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCInt64(i.ToString,System.Int64.Parse(al[i]))
+                else k[i]:=new KSCInt64(i.ToString,0);
+          end;
+          if sss[2].Left(4)='byte' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCByte(i.ToString,System.Byte.Parse(al[i]))
+                else k[i]:=new KSCByte(i.ToString,0);
+          end;
+          if sss[2].Left(6)='uint16' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCUInt16(i.ToString,System.UInt16.Parse(al[i]))
+                else k[i]:=new KSCUInt16(i.ToString,0);
+          end;
+          if sss[2].Left(6)='uint32' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCUInt32(i.ToString,System.UInt32.Parse(al[i]))
+                else k[i]:=new KSCUInt32(i.ToString,0);
+          end;
+          if sss[2].Left(6)='uint64' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCUInt64(i.ToString,System.UInt64.Parse(al[i]))
+                else k[i]:=new KSCUInt64(i.ToString,0);
+          end;
+          if sss[2].Left(6)='single' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCSingle(i.ToString,System.Single.Parse(al[i]))
+                else k[i]:=new KSCSingle(i.ToString,0);
+          end;
+          if sss[2].Left(6)='double' then 
+          begin
+            for var i:=0 to k.Length-1 do
+              if i<=al.Length-1 then k[i]:=new KSCDouble(i.ToString,System.Double.Parse(al[i]))
+                else k[i]:=new KSCDouble(i.ToString,0);
+          end;
+          if sss[2].Left(6)='string' then 
+          begin
+            var kk:=GetStringArray(s);
+            l:=GetArrayLength(s);
+            if l=-1 then k:=new KSCObject[kk.Length] else k:=new KSCObject[l];
+            for var i:=0 to k.Length-1 do
+              if i<=kk.Length-1 then k[i]:=new KSCString(i.ToString,kk[i])
+              else k[i]:=new KSCString(i.ToString,'');
+          end;
+          
+          Names.Add(new KSCArray(sss[1],k));
         end
         else
         begin

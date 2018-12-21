@@ -285,7 +285,7 @@ type
       var a, b: integer;
       a:=s.IndexOf('[');
       b:=s.LastIndexOf(']');
-      if (a-b)>1 then Result:=System.Int32.Parse(Copy(s,a+2,b-a-1)) else Result:=-1;
+      if (b-a)>1 then Result:=System.Int32.Parse(Copy(s,a+2,b-a-1)) else Result:=-1;
     end;
     
     public static function GetArray(s: string): array of string;
@@ -373,7 +373,7 @@ type
           if sss[2].Left(5)='int32' then 
           begin
             var l:=GetArrayLength(s);
-            var al:=GetArray(s.Split('=')[1]);
+            var al:=GetArray(s);
             
             var tp:=AutoTypeParser(al[0]);
             foreach var x in al do if AutoTypeParser(x) <> tp then raise new DifferentArrayElementsException('Элементы массивы должны быть одного типа');

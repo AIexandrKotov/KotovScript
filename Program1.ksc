@@ -1,7 +1,4 @@
-var a := -5;
-var a+5 := a+5;
-a+5 := 100;
-writeln(a+5);
-destruct a+5;
-var a+5 := 100;
-writeln(a+5);
+begin
+var a: int32;
+writeln(a);
+end.

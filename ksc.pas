@@ -7,15 +7,39 @@ const
   function StrFull := $'{ModuleName} {StrVersion}';
 
 type
+  SequenceType<T> = sequence of T;
+
   Compiler = static class
     public static Names: List<KSCObject>;
+    public static Tree: List<object>;
     
     public static CompileFileName: string := 'Program1.ksc';
     public static CompileFile: string;
     
+    public static procedure TreeAdd(var s: string);
+    begin
+      if (Contains(s,'begin')) and (Contains(s,'end')) then
+      begin
+        var k := KSCParser.CutFromText(CompileFile,'begin','end');
+        TreeAdd(k);
+      end
+      else Tree.Add(s);
+    end;
+    
+    public static procedure CompileTree();
+    begin
+      Tree := new List<Object>;
+      if (Contains(CompileFile,'begin')) and (Contains(CompileFile,'end.')) then
+      begin
+        var k := KSCParser.CutFromText(CompileFile,'begin','end.');
+        TreeAdd(k);
+      end else raise new System.Exception;
+    end;
+    
     public static procedure StartCompiling();
     begin
       CompileFile := ReadAllText(CompileFileName,Encoding.UTF8);
+      CompileTree();
       System.Console.BackgroundColor:=KTX.Black;
       System.Console.ForegroundColor:=KTX.Gray;
       Console.Clear;
@@ -120,7 +144,7 @@ type
       end;
     end;
     
-    public static procedure CompileLine(CCS: string);
+    public static procedure CompileString(CCS: string);
     begin
       var Declaration := CCS.ToWords.Contains('var');
       var Destruction := CCS.ToWords.Contains('destruct');
@@ -133,14 +157,28 @@ type
       if IsAction then Method(CCS);
     end;
     
+    public static procedure CompileLine(o: object);
+    begin
+      match o with
+        string(var CCS):
+        begin
+          var CS := CCS.Split(';');
+          for var i:=0 to CS.Length-1 do CompileString(CS[i]);
+        end;
+        SequenceType<object>(var oo): foreach var x in oo do CompileLine(x);
+      end;
+    end;
+    
     public static procedure Compile();
     begin
       StartCompiling;
       Names := new List<KSCObject>;
-      var CompileList := CompileFile.Remove(NewLine).Split(';');
-      for var i:=0 to CompileList.Length-1 do
+      var CompileList := CompileFile.Remove(NewLine).Remove('	').Split(';');
+      for var i:=0 to Tree.Count-1 do
+      //for var i:=0 to CompileList.Length-11 do
       begin
-        CompileLine(CompileList[i]);
+        CompileLine(Tree[i]);
+        //CompileLine(CompileList[i]);
       end;
       Names := nil;
     end;
@@ -166,7 +204,7 @@ begin
       begin
         Console.Clear;
         try
-          Compiler.Compile
+          Compiler.Compile();
         except
           on e: System.Exception do writeln(e);
         end;
